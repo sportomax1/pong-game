@@ -1,12 +1,85 @@
-body {
+/* style.css */
+
+/* Reset body and html */
+html, body {
     margin: 0;
-    background-color: black;
+    padding: 0;
+    background-color: #000;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+/* Canvas full width and centered */
+canvas {
+    display: block;
+    margin: 0 auto;
+    background-color: #000;
+}
+
+/* Optional: add glow to canvas edges */
+#gameCanvas {
+    box-shadow: 0 0 20px #fff;
+}
+
+/* Scores styling (drawn on canvas but font can be adjusted) */
+.score {
+    color: #fff;
+    font-size: 30px;
+    position: absolute;
+    top: 20px;
+    font-weight: bold;
+}
+
+/* Popup overlay */
+#welcomeOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    z-index: 9999;
 }
 
-canvas {
-    border: 2px solid white;
+/* Popup box */
+#welcomeOverlay div {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 80%;
+    font-family: Arial, sans-serif;
+}
+
+/* Popup message */
+#welcomeOverlay p {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Close button */
+#welcomeOverlay button {
+    font-size: 18px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007BFF;
+    color: white;
+    transition: background-color 0.3s;
+}
+
+#welcomeOverlay button:hover {
+    background-color: #0056b3;
+}
+
+/* Optional: confetti squares (handled via JS, can style size/colors here if needed) */
+.confetti {
+    position: absolute;
+    width: 6px;
+    height: 6px;
 }
