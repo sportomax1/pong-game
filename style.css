@@ -1,0 +1,89 @@
+/* style.css */
+
+/* Reset body and html */
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+/* Canvas full width and centered */
+canvas {
+    display: block;
+    margin: 0 auto;
+    background-color: #000;
+    border: 2px solid white;
+    box-shadow: 0 0 20px #fff;
+}
+
+/* Welcome overlay styles */
+#welcomeOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+#welcomeOverlay div {
+    background: #fff;
+    color: #222;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 90vw;
+    box-shadow: 0 0 20px #0008;
+}
+#welcomeOverlay h2 {
+    margin-top: 0;
+}
+#welcomeOverlay button {
+    font-size: 1.2em;
+    padding: 10px 30px;
+    border-radius: 6px;
+    border: none;
+    background: #ff9800;
+    color: #fff;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.2s;
+}
+#welcomeOverlay button:hover {
+    background: #e65100;
+}
+
+/* Touch controls styles */
+#touchControls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+#touchControls button {
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    margin: 0 10px;
+    box-shadow: 0 2px 8px #0006;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#touchControls button:active {
+    background: #ff9800;
+}
+
+/* Optional: add more styles for overlays, scores, etc. if needed */

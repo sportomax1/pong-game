@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="welcomeOverlay">
+        <div>
+            <h2>Welcome to Pong Basketball!</h2>
+            <p>First to 3 goals wins.<br><br>
+            <b>Controls:</b><br>
+            <span id="controls-desktop">Player: Up/Down Arrow Keys</span><br>
+            <span id="controls-touch" style="display:none;">Player: Swipe Up/Down or use on-screen buttons</span><br>
+            <br>AI is always on the right.<br><br>
+            <button id="startBtn">Start Game</button>
+            </p>
+        </div>
+    </div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="touchControls" style="display:none; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:10;">
+        <button id="btnUp" style="font-size:2em; margin:10px;">⬆️</button>
+        <button id="btnDown" style="font-size:2em; margin:10px;">⬇️</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
