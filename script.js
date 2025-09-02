@@ -1,138 +1,222 @@
+// Get canvas and context
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const WIDTH = canvas.width;
-const HEIGHT = canvas.height;
+// Game settings
+let paddleWidth = 15;
+let paddleHeight = 120;
+let ballRadius = 12;
+let paddleSpeed = 8;
 
-// Ball
-let ball = {
-    x: WIDTH/2,
-    y: HEIGHT/2,
-    size: 20,
-    dx: 4,
-    dy: 4,
-    color: "red"
-};
-
-// Paddles
-let paddleWidth = 10;
-let paddleHeight = 100;
-let paddle1 = { x: 20, y: HEIGHT/2 - paddleHeight/2 };
-let paddle2 = { x: WIDTH-30, y: HEIGHT/2 - paddleHeight/2 };
-let paddleSpeed = 6;
-
-// Score
+let paddle1Y, paddle2Y;
+let ballX, ballY, ballSpeedX, ballSpeedY;
 let score1 = 0;
 let score2 = 0;
 
-// Controls
-let keys = {};
-document.addEventListener("keydown", e => keys[e.key] = true);
-document.addEventListener("keyup", e => keys[e.key] = false);
+// Device detection
+function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && window.innerWidth > 768)) {
+        return "Tablet";
+    } else if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+        return "Mobile";
+    } else {
+        return "Desktop";
+    }
+}
 
-// Confetti
-let confetti = [];
+// Show welcome popup
+function showWelcomePopup() {
+    const deviceType = getDeviceType();
 
-// Draw everything
-function draw() {
-    // Background
-    ctx.fillStyle = "black";
-    ctx.fillRect(0,0,WIDTH,HEIGHT);
+    const overlay = document.createElement("div");
+    overlay.id = "welcomeOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.backgroundColor = "rgba(0,0,0,0.7)";
+    overlay.style.display = "flex";
+    overlay.style.justifyContent = "center";
+    overlay.style.alignItems = "center";
+    overlay.style.zIndex = 9999;
 
-    // Center line
-    ctx.strokeStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(WIDTH/2,0);
-    ctx.lineTo(WIDTH/2, HEIGHT);
-    ctx.stroke();
+    const box = document.createElement("div");
+    box.style.backgroundColor = "#fff";
+    box.style.padding = "30px";
+    box.style.borderRadius = "10px";
+    box.style.textAlign = "center";
+    box.style.maxWidth = "80%";
+    box.style.fontFamily = "Arial, sans-serif";
 
-    // Paddles
-    ctx.fillStyle = "white";
-    ctx.fillRect(paddle1.x, paddle1.y, paddleWidth, paddleHeight);
-    ctx.fillRect(paddle2.x, paddle2.y, paddleWidth, paddleHeight);
+    const message = document.createElement("p");
+    message.textContent = `Welcome to ${deviceType} Pong!`;
+    message.style.fontSize = "24px";
+    message.style.marginBottom = "20px";
 
-    // Ball
-    ctx.fillStyle = ball.color;
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.size/2, 0, Math.PI*2);
-    ctx.fill();
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "Close";
+    closeBtn.style.fontSize = "18px";
+    closeBtn.style.padding = "10px 20px";
+    closeBtn.style.cursor = "pointer";
 
-    // Score
-    ctx.fillStyle = "white";
-    ctx.font = "48px sans-serif";
-    ctx.fillText(`${score1}   ${score2}`, WIDTH/2 - 50, 50);
+    closeBtn.addEventListener("click", () => {
+        document.body.removeChild(overlay);
+    });
 
-    // Draw confetti
-    confetti.forEach((c, i) => {
-        ctx.fillStyle = c.color;
-        ctx.fillRect(c.x, c.y, 5, 5);
-        c.x += c.vx;
-        c.y += c.vy;
-        if (c.y > HEIGHT || c.x < 0 || c.x > WIDTH) confetti.splice(i, 1);
+    box.appendChild(message);
+    box.appendChild(closeBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
+// Call popup on load
+window.addEventListener("load", showWelcomePopup);
+
+// Detect mobile for controls
+function isMobile() {
+    const type = getDeviceType();
+    return type === "Mobile" || type === "Tablet";
+}
+
+// Resize canvas
+function resizeCanvas() {
+    if(isMobile()){
+        canvas.width = window.innerWidth * 0.95;
+        canvas.height = window.innerHeight * 0.7;
+    } else {
+        canvas.width = 800;
+        canvas.height = 600;
+    }
+    paddle1Y = canvas.height / 2 - paddleHeight / 2;
+    paddle2Y = canvas.height / 2 - paddleHeight / 2;
+    resetBall();
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// Initialize ball in center
+function resetBall() {
+    ballX = canvas.width / 2;
+    ballY = canvas.height / 2;
+    ballSpeedX = 6 * (Math.random() > 0.5 ? 1 : -1);
+    ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
+}
+
+// Touch controls for mobile/tablet
+if(isMobile()){
+    canvas.addEventListener("touchmove", function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        paddle1Y = touch.clientY - paddleHeight / 2;
+        if (paddle1Y < 0) paddle1Y = 0;
+        if (paddle1Y + paddleHeight > canvas.height) paddle1Y = canvas.height - paddleHeight;
+    });
+} else {
+    // Keyboard controls for desktop
+    document.addEventListener("keydown", function(e) {
+        if(e.key === "ArrowUp") paddle1Y -= 10;
+        if(e.key === "ArrowDown") paddle1Y += 10;
+        if(paddle1Y < 0) paddle1Y = 0;
+        if(paddle1Y + paddleHeight > canvas.height) paddle1Y = canvas.height - paddleHeight;
     });
 }
 
-// Update game state
+// Draw functions
+function drawRect(x, y, w, h, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, w, h);
+}
+
+function drawCircle(x, y, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2, true);
+    ctx.fill();
+}
+
+function drawText(text, x, y, color, font="30px Arial") {
+    ctx.fillStyle = color;
+    ctx.font = font;
+    ctx.fillText(text, x, y);
+}
+
+// Confetti effect
+function confetti() {
+    for(let i=0;i<50;i++){
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const size = Math.random() * 8 + 2;
+        ctx.fillStyle = `hsl(${Math.random()*360}, 100%, 50%)`;
+        ctx.fillRect(x,y,size,size);
+    }
+}
+
+// Game update
 function update() {
-    // Paddles
-    if (keys["w"] && paddle1.y > 0) paddle1.y -= paddleSpeed;
-    if (keys["s"] && paddle1.y + paddleHeight < HEIGHT) paddle1.y += paddleSpeed;
-    if (keys["ArrowUp"] && paddle2.y > 0) paddle2.y -= paddleSpeed;
-    if (keys["ArrowDown"] && paddle2.y + paddleHeight < HEIGHT) paddle2.y += paddleSpeed;
+    ballX += ballSpeedX;
+    ballY += ballSpeedY;
 
-    // Ball movement
-    ball.x += ball.dx;
-    ball.y += ball.dy;
-
-    // Bounce top/bottom
-    if (ball.y - ball.size/2 <= 0 || ball.y + ball.size/2 >= HEIGHT) ball.dy *= -1;
-
-    // Bounce paddles
-    if ((ball.x - ball.size/2 <= paddle1.x + paddleWidth &&
-         ball.y >= paddle1.y && ball.y <= paddle1.y + paddleHeight) ||
-        (ball.x + ball.size/2 >= paddle2.x &&
-         ball.y >= paddle2.y && ball.y <= paddle2.y + paddleHeight)) {
-        ball.dx *= -1;
+    // Top/bottom collision
+    if(ballY - ballRadius < 0 || ballY + ballRadius > canvas.height){
+        ballSpeedY = -ballSpeedY;
     }
 
-    // Goal detection
-    if (ball.x - ball.size/2 <= 0) {
-        score2++;
-        resetBall();
-        spawnConfetti();
+    // Left paddle collision
+    if(ballX - ballRadius < paddleWidth){
+        if(ballY > paddle1Y && ballY < paddle1Y + paddleHeight){
+            ballSpeedX = -ballSpeedX;
+        } else {
+            score2++;
+            resetBall();
+            confetti();
+        }
     }
-    if (ball.x + ball.size/2 >= WIDTH) {
-        score1++;
-        resetBall();
-        spawnConfetti();
+
+    // Right paddle collision
+    if(ballX + ballRadius > canvas.width - paddleWidth){
+        if(ballY > paddle2Y && ballY < paddle2Y + paddleHeight){
+            ballSpeedX = -ballSpeedX;
+        } else {
+            score1++;
+            resetBall();
+            confetti();
+        }
     }
+
+    // Simple AI for right paddle
+    if(paddle2Y + paddleHeight/2 < ballY){
+        paddle2Y += paddleSpeed;
+    } else {
+        paddle2Y -= paddleSpeed;
+    }
+    if(paddle2Y < 0) paddle2Y = 0;
+    if(paddle2Y + paddleHeight > canvas.height) paddle2Y = canvas.height - paddleHeight;
 }
 
-// Reset ball
-function resetBall() {
-    ball.x = WIDTH/2;
-    ball.y = HEIGHT/2;
-    ball.dx *= -1;
+// Render game
+function render() {
+    // Clear canvas
+    drawRect(0,0,canvas.width,canvas.height,"#000");
+
+    // Draw paddles
+    drawRect(0, paddle1Y, paddleWidth, paddleHeight, "#fff");
+    drawRect(canvas.width - paddleWidth, paddle2Y, paddleWidth, paddleHeight, "#fff");
+
+    // Draw red ball
+    drawCircle(ballX, ballY, ballRadius, "red");
+
+    // Draw scores
+    drawText(score1, canvas.width*0.25, 50, "#fff");
+    drawText(score2, canvas.width*0.75, 50, "#fff");
 }
 
-// Spawn confetti
-function spawnConfetti() {
-    for (let i = 0; i < 50; i++) {
-        confetti.push({
-            x: WIDTH/2,
-            y: HEIGHT/2,
-            vx: Math.random()*10 -5,
-            vy: Math.random()*10 -5,
-            color: ["red","green","blue","yellow"][Math.floor(Math.random()*4)]
-        });
-    }
-}
-
-// Game loop
-function loop() {
+// Main loop
+function gameLoop(){
     update();
-    draw();
-    requestAnimationFrame(loop);
+    render();
+    requestAnimationFrame(gameLoop);
 }
 
-loop();
+gameLoop();
