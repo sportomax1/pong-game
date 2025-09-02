@@ -12,6 +12,9 @@ let paddle1Y, paddle2Y;
 let ballX, ballY, ballSpeedX, ballSpeedY;
 let score1 = 0;
 let score2 = 0;
+let gameState = "playing"; // "playing" or "won"
+let winner = 0; // 1 or 2
+let keys = {}; // Track key states for smooth movement
 
 // Device detection
 function getDeviceType() {
@@ -51,7 +54,7 @@ function showWelcomePopup() {
     box.style.fontFamily = "Arial, sans-serif";
 
     const message = document.createElement("p");
-    message.textContent = `Welcome to ${deviceType} Pong!`;
+    message.textContent = `⚽ WELCOME TO ${deviceType.toUpperCase()} PONG! ⚽`;
     message.style.fontSize = "24px";
     message.style.marginBottom = "20px";
 
@@ -104,6 +107,85 @@ function resetBall() {
     ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
 }
 
+// Restart the entire game
+function restartGame() {
+    score1 = 0;
+    score2 = 0;
+    gameState = "playing";
+    winner = 0;
+    resetBall();
+    // Remove any existing win overlay
+    const existingOverlay = document.getElementById("winOverlay");
+    if (existingOverlay) {
+        document.body.removeChild(existingOverlay);
+    }
+    // Reset paddle positions
+    paddle1Y = canvas.height / 2 - paddleHeight / 2;
+    paddle2Y = canvas.height / 2 - paddleHeight / 2;
+}
+
+// Show win message
+function showWinMessage(winnerPlayer) {
+    // Remove any existing win overlay first
+    const existingOverlay = document.getElementById("winOverlay");
+    if (existingOverlay) {
+        document.body.removeChild(existingOverlay);
+    }
+    
+    const overlay = document.createElement("div");
+    overlay.id = "winOverlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = 0;
+    overlay.style.left = 0;
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.backgroundColor = "rgba(0,0,0,0.8)";
+    overlay.style.display = "flex";
+    overlay.style.justifyContent = "center";
+    overlay.style.alignItems = "center";
+    overlay.style.zIndex = 10000; // Higher than welcome popup
+
+    const box = document.createElement("div");
+    box.style.backgroundColor = "#fff";
+    box.style.padding = "40px";
+    box.style.borderRadius = "15px";
+    box.style.textAlign = "center";
+    box.style.maxWidth = "80%";
+    box.style.fontFamily = "Arial, sans-serif";
+
+    const message = document.createElement("p");
+    message.textContent = `🎉 PLAYER ${winnerPlayer} WINS! 🎉`;
+    message.style.fontSize = "28px";
+    message.style.marginBottom = "20px";
+    message.style.color = "#007BFF";
+    message.style.fontWeight = "bold";
+
+    const instruction = document.createElement("p");
+    instruction.textContent = "Click here or press 'R' to restart";
+    instruction.style.fontSize = "18px";
+    instruction.style.marginBottom = "20px";
+    instruction.style.color = "#666";
+
+    const restartBtn = document.createElement("button");
+    restartBtn.textContent = "Restart Game";
+    restartBtn.style.fontSize = "18px";
+    restartBtn.style.padding = "10px 20px";
+    restartBtn.style.cursor = "pointer";
+    restartBtn.style.border = "none";
+    restartBtn.style.borderRadius = "5px";
+    restartBtn.style.backgroundColor = "#007BFF";
+    restartBtn.style.color = "white";
+
+    restartBtn.addEventListener("click", restartGame);
+    overlay.addEventListener("click", restartGame);
+
+    box.appendChild(message);
+    box.appendChild(instruction);
+    box.appendChild(restartBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
 // Touch controls for mobile/tablet
 if(isMobile()){
     canvas.addEventListener("touchmove", function(e) {
@@ -114,12 +196,20 @@ if(isMobile()){
         if (paddle1Y + paddleHeight > canvas.height) paddle1Y = canvas.height - paddleHeight;
     });
 } else {
-    // Keyboard controls for desktop
+    // Keyboard controls for desktop - track key states for smooth movement
     document.addEventListener("keydown", function(e) {
-        if(e.key === "ArrowUp") paddle1Y -= 10;
-        if(e.key === "ArrowDown") paddle1Y += 10;
-        if(paddle1Y < 0) paddle1Y = 0;
-        if(paddle1Y + paddleHeight > canvas.height) paddle1Y = canvas.height - paddleHeight;
+        keys[e.key] = true;
+        
+        // Handle restart
+        if (e.key === "r" || e.key === "R") {
+            if (gameState === "won") {
+                restartGame();
+            }
+        }
+    });
+    
+    document.addEventListener("keyup", function(e) {
+        keys[e.key] = false;
     });
 }
 
@@ -155,6 +245,24 @@ function confetti() {
 
 // Game update
 function update() {
+    // Don't update game if someone has won
+    if (gameState === "won") {
+        return;
+    }
+
+    // Handle smooth desktop paddle movement
+    if (!isMobile()) {
+        if (keys["ArrowUp"]) {
+            paddle1Y -= paddleSpeed;
+        }
+        if (keys["ArrowDown"]) {
+            paddle1Y += paddleSpeed;
+        }
+        // Keep paddle in bounds
+        if (paddle1Y < 0) paddle1Y = 0;
+        if (paddle1Y + paddleHeight > canvas.height) paddle1Y = canvas.height - paddleHeight;
+    }
+
     ballX += ballSpeedX;
     ballY += ballSpeedY;
 
@@ -171,6 +279,12 @@ function update() {
             score2++;
             resetBall();
             confetti();
+            // Check for win condition
+            if (score2 >= 3) {
+                gameState = "won";
+                winner = 2;
+                showWinMessage(2);
+            }
         }
     }
 
@@ -182,6 +296,12 @@ function update() {
             score1++;
             resetBall();
             confetti();
+            // Check for win condition
+            if (score1 >= 3) {
+                gameState = "won";
+                winner = 1;
+                showWinMessage(1);
+            }
         }
     }
 
