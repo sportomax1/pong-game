@@ -1,4 +1,4 @@
-// script.js - Pong Game with Rainbow Flash, Basketball Emoji, Touch Controls, and Game End
+// script.js - Pong Game with Rainbow Flash, Baseball Emoji, Touch Controls, and Game End
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -33,8 +33,8 @@ let rainbowFlash = false;
 let flashColor = '#000';
 let flashTimeout = null;
 
-// Basketball emoji
-const basketball = '🏀';
+// Baseball emoji
+const baseball = '⚾';
 
 // Touch controls
 const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -93,11 +93,11 @@ function draw() {
     // Paddles
     drawRect(0, playerY, paddleWidth, paddleHeight, '#fff');
     drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, '#fff');
-    // Ball as basketball emoji
+    // Ball as baseball emoji
     ctx.font = `${ballSize}px Arial`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
-    ctx.fillText(basketball, ballX, ballY);
+    ctx.fillText(baseball, ballX, ballY);
     // Scores
     drawText(playerScore, canvas.width / 4, 50, '#fff');
     drawText(aiScore, 3 * canvas.width / 4, 50, '#fff');
