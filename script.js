@@ -51,7 +51,7 @@ function showWelcomePopup() {
     box.style.fontFamily = "Arial, sans-serif";
 
     const message = document.createElement("p");
-    message.textContent = `Welcome to ${deviceType} Pong!`;
+    message.textContent = `⚽ WELCOME TO ${deviceType.toUpperCase()} PONG! ⚽`;
     message.style.fontSize = "24px";
     message.style.marginBottom = "20px";
 
