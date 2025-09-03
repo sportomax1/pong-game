@@ -67,46 +67,43 @@ let isPaused = false;
 let currentPlayerName = '';
 let playerHistory = [];
 
-// Load player history from localStorage
+// Google Apps Script endpoint for shared player history
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwbLuJImJifWHQVXuTJKAUPSlgICu85k4IuMtrFc3r2vFHrgqUZk0boKx5R2NS973O-/exec';
+
+// Load player history from Google Sheet via Apps Script
 function loadPlayerHistory() {
-    const saved = localStorage.getItem('pongPlayerHistory');
-    if (saved) {
-        try {
-            playerHistory = JSON.parse(saved);
-        } catch (e) {
+    fetch(APPS_SCRIPT_URL)
+        .then(res => res.json())
+        .then(data => {
+            playerHistory = Array.isArray(data) ? data : [];
+            displayPlayerHistory();
+        })
+        .catch(() => {
             playerHistory = [];
-        }
-    }
+            displayPlayerHistory();
+        });
 }
 
-// Save player history to localStorage
-function savePlayerHistory() {
-    localStorage.setItem('pongPlayerHistory', JSON.stringify(playerHistory));
-}
-
-// Add player to history
+// Add player to Google Sheet via Apps Script
 function addPlayerToHistory(name) {
     if (!name || name.trim() === '') return;
-    
     const trimmedName = name.trim();
     const now = new Date();
     const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
-    
-    // Remove if already exists to avoid duplicates
+
+    // Remove duplicate in local array for display only
     playerHistory = playerHistory.filter(player => player.name !== trimmedName);
-    
-    // Add to beginning of array
-    playerHistory.unshift({
-        name: trimmedName,
-        timestamp: timestamp
-    });
-    
-    // Keep only last 10 players
+    playerHistory.unshift({ name: trimmedName, timestamp });
     if (playerHistory.length > 10) {
         playerHistory = playerHistory.slice(0, 10);
     }
-    
-    savePlayerHistory();
+
+    // Send POST request to add to sheet
+    fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmedName, timestamp })
+    });
 }
 
 // Pause game functionality
@@ -132,11 +129,11 @@ function restartGame() {
     playerY = canvas.height / 2 - paddleHeight / 2;
     aiY = canvas.height / 2 - paddleHeight / 2;
     resetBall();
-    
+
     // Hide pause overlay and show welcome
     if (pauseOverlay) pauseOverlay.style.display = 'none';
     if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
-    
+
     // Clear current player name and refocus input
     currentPlayerName = '';
     if (playerNameInput) {
@@ -158,22 +155,22 @@ function showPlayerHistory() {
 
 function displayPlayerHistory() {
     if (!playerHistoryList) return;
-    
+
     if (playerHistory.length === 0) {
         playerHistoryList.innerHTML = '<p style="text-align: center; color: #666; margin: 20px 0;">No previous players found.</p>';
         return;
     }
-    
+
     let historyHTML = '';
     playerHistory.forEach((player, index) => {
         historyHTML += `
             <div class="player-entry">
                 <span class="player-name">${escapeHtml(player.name)}</span>
-                <span class="player-timestamp">${player.timestamp}</span>
+                <span class="player-timestamp">${escapeHtml(player.timestamp || '')}</span>
             </div>
         `;
     });
-    
+
     playerHistoryList.innerHTML = historyHTML;
 }
 
@@ -352,7 +349,7 @@ function setupKeyboard() {
 // Touch controls
 function setupTouch() {
     if (!btnUp || !btnDown || !touchControls) return;
-    
+
     btnUp.addEventListener('touchstart', function(e) {
         playerDY = -paddleSpeed;
         e.preventDefault();
@@ -369,7 +366,7 @@ function setupTouch() {
         playerDY = 0;
         e.preventDefault();
     });
-    
+
     // Pause button for touch devices
     if (btnPause) {
         btnPause.addEventListener('touchstart', function(e) {
@@ -381,7 +378,7 @@ function setupTouch() {
             e.preventDefault();
         });
     }
-    
+
     // Swipe support
     let touchStartY = null;
     canvas.addEventListener('touchstart', function(e) {
@@ -422,11 +419,11 @@ function setupDeviceUI() {
 function startGame() {
     const name = playerNameInput ? playerNameInput.value : '';
     currentPlayerName = name.trim();
-    
+
     if (currentPlayerName) {
         addPlayerToHistory(currentPlayerName);
     }
-    
+
     if (welcomeOverlay) welcomeOverlay.style.display = 'none';
     game();
 }
@@ -454,22 +451,22 @@ if (backToMenuBtn) {
 
 setupDeviceUI();
 
-// Initialize player history
+// Initialize player history from Google Sheet
 loadPlayerHistory();
 
 // Handle canvas scaling for responsive design
 function scaleCanvas() {
     const container = document.querySelector('.game-container');
     if (!container || !canvas) return;
-    
+
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    
+
     // Calculate scale to fit canvas in container while maintaining aspect ratio
     const scaleX = (containerWidth - 20) / canvas.width;
     const scaleY = (containerHeight - 20) / canvas.height;
     const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
-    
+
     // Apply scaling
     canvas.style.width = (canvas.width * scale) + 'px';
     canvas.style.height = (canvas.height * scale) + 'px';
