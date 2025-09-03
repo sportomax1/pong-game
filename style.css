@@ -8,15 +8,34 @@ html, body {
     height: 100%;
     overflow: hidden;
     font-family: Arial, sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-text-size-adjust: 100%;
 }
 
-/* Canvas full width and centered */
+/* Canvas responsive and centered */
 canvas {
     display: block;
     margin: 0 auto;
     background-color: #000;
     border: 2px solid white;
     box-shadow: 0 0 20px #fff;
+    max-width: 100vw;
+    max-height: 100vh;
+    width: auto;
+    height: auto;
+}
+
+/* Container for canvas to handle responsive scaling */
+.game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    position: relative;
 }
 
 /* Welcome overlay styles */
@@ -59,6 +78,30 @@ canvas {
     background: #e65100;
 }
 
+/* Name input styles */
+#nameInputContainer {
+    margin: 15px 0;
+}
+#nameInputContainer label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: inline-block;
+}
+#playerNameInput {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    width: 200px;
+    max-width: 80%;
+    margin: 5px 0 10px 0;
+    text-align: center;
+}
+#playerNameInput:focus {
+    outline: none;
+    border-color: #ff9800;
+}
+
 /* Touch controls styles */
 #touchControls {
     position: fixed;
@@ -87,3 +130,188 @@ canvas {
 }
 
 /* Optional: add more styles for overlays, scores, etc. if needed */
+
+/* Pause overlay styles */
+#pauseOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+#pauseOverlay div {
+    background: #fff;
+    color: #222;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 0 20px #0008;
+}
+
+#pauseOverlay h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+#pauseOverlay h3 {
+    margin: 20px 0 15px 0;
+    color: #ff9800;
+}
+
+#pauseButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#pauseOverlay button {
+    font-size: 1.1em;
+    padding: 12px 25px;
+    border-radius: 6px;
+    border: none;
+    background: #ff9800;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+    min-width: 150px;
+}
+
+#pauseOverlay button:hover {
+    background: #e65100;
+}
+
+#backToMenuBtn {
+    background: #666 !important;
+    margin-top: 15px;
+}
+
+#backToMenuBtn:hover {
+    background: #555 !important;
+}
+
+#playerHistoryList {
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    margin: 15px 0;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.player-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-entry:last-child {
+    border-bottom: none;
+}
+
+.player-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.player-timestamp {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 600px) {
+    #pauseOverlay div {
+        padding: 20px 25px;
+        margin: 10px;
+    }
+    
+    #pauseButtons {
+        gap: 8px;
+    }
+    
+    #pauseOverlay button {
+        font-size: 1em;
+        padding: 10px 20px;
+        min-width: 120px;
+    }
+    
+    .player-entry {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+}
+
+/* iPhone and mobile device specific fixes */
+@media (max-width: 480px) {
+    canvas {
+        max-width: 95vw;
+        max-height: 70vh;
+    }
+    
+    #welcomeOverlay div, #pauseOverlay div {
+        padding: 15px 20px;
+        margin: 5px;
+        max-width: 95vw;
+    }
+    
+    #welcomeOverlay h2, #pauseOverlay h2 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+    
+    #playerNameInput {
+        width: 180px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    #touchControls {
+        bottom: 10px;
+        gap: 5px;
+    }
+    
+    #touchControls button {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5em;
+        margin: 0 5px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+    canvas {
+        max-height: 85vh;
+    }
+    
+    #touchControls {
+        bottom: 5px;
+    }
+    
+    #welcomeOverlay div, #pauseOverlay div {
+        max-height: 90vh;
+        padding: 20px 25px;
+    }
+}
+
+/* High DPI screen adjustments */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    canvas {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: pixelated;
+    }
+}

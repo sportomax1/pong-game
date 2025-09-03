@@ -40,6 +40,7 @@ const baseball = '⚾';
 const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 const btnUp = document.getElementById('btnUp');
 const btnDown = document.getElementById('btnDown');
+const btnPause = document.getElementById('btnPause');
 const touchControls = document.getElementById('touchControls');
 
 // Welcome overlay
@@ -47,6 +48,140 @@ const welcomeOverlay = document.getElementById('welcomeOverlay');
 const startBtn = document.getElementById('startBtn');
 const controlsDesktop = document.getElementById('controls-desktop');
 const controlsTouch = document.getElementById('controls-touch');
+const playerNameInput = document.getElementById('playerNameInput');
+
+// Pause overlay
+const pauseOverlay = document.getElementById('pauseOverlay');
+const resumeBtn = document.getElementById('resumeBtn');
+const historyBtn = document.getElementById('historyBtn');
+const restartBtn = document.getElementById('restartBtn');
+const playerHistorySection = document.getElementById('playerHistorySection');
+const playerHistoryList = document.getElementById('playerHistoryList');
+const backToMenuBtn = document.getElementById('backToMenuBtn');
+const pauseButtons = document.getElementById('pauseButtons');
+
+// Game state
+let isPaused = false;
+
+// Player data
+let currentPlayerName = '';
+let playerHistory = [];
+
+// Load player history from localStorage
+function loadPlayerHistory() {
+    const saved = localStorage.getItem('pongPlayerHistory');
+    if (saved) {
+        try {
+            playerHistory = JSON.parse(saved);
+        } catch (e) {
+            playerHistory = [];
+        }
+    }
+}
+
+// Save player history to localStorage
+function savePlayerHistory() {
+    localStorage.setItem('pongPlayerHistory', JSON.stringify(playerHistory));
+}
+
+// Add player to history
+function addPlayerToHistory(name) {
+    if (!name || name.trim() === '') return;
+    
+    const trimmedName = name.trim();
+    const now = new Date();
+    const timestamp = now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+    
+    // Remove if already exists to avoid duplicates
+    playerHistory = playerHistory.filter(player => player.name !== trimmedName);
+    
+    // Add to beginning of array
+    playerHistory.unshift({
+        name: trimmedName,
+        timestamp: timestamp
+    });
+    
+    // Keep only last 10 players
+    if (playerHistory.length > 10) {
+        playerHistory = playerHistory.slice(0, 10);
+    }
+    
+    savePlayerHistory();
+}
+
+// Pause game functionality
+function pauseGame() {
+    if (gameOver) return;
+    isPaused = true;
+    if (pauseOverlay) pauseOverlay.style.display = 'flex';
+    showPauseMenu();
+}
+
+function resumeGame() {
+    isPaused = false;
+    if (pauseOverlay) pauseOverlay.style.display = 'none';
+    game();
+}
+
+function restartGame() {
+    // Reset game state
+    playerScore = 0;
+    aiScore = 0;
+    gameOver = false;
+    isPaused = false;
+    playerY = canvas.height / 2 - paddleHeight / 2;
+    aiY = canvas.height / 2 - paddleHeight / 2;
+    resetBall();
+    
+    // Hide pause overlay and show welcome
+    if (pauseOverlay) pauseOverlay.style.display = 'none';
+    if (welcomeOverlay) welcomeOverlay.style.display = 'flex';
+    
+    // Clear current player name and refocus input
+    currentPlayerName = '';
+    if (playerNameInput) {
+        playerNameInput.value = '';
+        playerNameInput.focus();
+    }
+}
+
+function showPauseMenu() {
+    if (pauseButtons) pauseButtons.style.display = 'flex';
+    if (playerHistorySection) playerHistorySection.style.display = 'none';
+}
+
+function showPlayerHistory() {
+    if (pauseButtons) pauseButtons.style.display = 'none';
+    if (playerHistorySection) playerHistorySection.style.display = 'block';
+    displayPlayerHistory();
+}
+
+function displayPlayerHistory() {
+    if (!playerHistoryList) return;
+    
+    if (playerHistory.length === 0) {
+        playerHistoryList.innerHTML = '<p style="text-align: center; color: #666; margin: 20px 0;">No previous players found.</p>';
+        return;
+    }
+    
+    let historyHTML = '';
+    playerHistory.forEach((player, index) => {
+        historyHTML += `
+            <div class="player-entry">
+                <span class="player-name">${escapeHtml(player.name)}</span>
+                <span class="player-timestamp">${player.timestamp}</span>
+            </div>
+        `;
+    });
+    
+    playerHistoryList.innerHTML = historyHTML;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 function randomRainbowColor() {
     const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
@@ -115,7 +250,7 @@ function draw() {
 }
 
 function update() {
-    if (gameOver) return;
+    if (gameOver || isPaused) return;
     // Move player
     playerY += playerDY;
     if (playerY < 0) playerY = 0;
@@ -189,7 +324,7 @@ function update() {
 function game() {
     update();
     draw();
-    if (!gameOver) requestAnimationFrame(game);
+    if (!gameOver && !isPaused) requestAnimationFrame(game);
 }
 
 // Keyboard controls
@@ -199,6 +334,12 @@ function setupKeyboard() {
             playerDY = -paddleSpeed;
         } else if (e.key === 'ArrowDown') {
             playerDY = paddleSpeed;
+        } else if (e.key === 'Escape') {
+            if (isPaused) {
+                resumeGame();
+            } else if (!gameOver && welcomeOverlay.style.display === 'none') {
+                pauseGame();
+            }
         }
     });
     document.addEventListener('keyup', function(e) {
@@ -211,6 +352,7 @@ function setupKeyboard() {
 // Touch controls
 function setupTouch() {
     if (!btnUp || !btnDown || !touchControls) return;
+    
     btnUp.addEventListener('touchstart', function(e) {
         playerDY = -paddleSpeed;
         e.preventDefault();
@@ -227,6 +369,19 @@ function setupTouch() {
         playerDY = 0;
         e.preventDefault();
     });
+    
+    // Pause button for touch devices
+    if (btnPause) {
+        btnPause.addEventListener('touchstart', function(e) {
+            if (isPaused) {
+                resumeGame();
+            } else if (!gameOver && welcomeOverlay.style.display === 'none') {
+                pauseGame();
+            }
+            e.preventDefault();
+        });
+    }
+    
     // Swipe support
     let touchStartY = null;
     canvas.addEventListener('touchstart', function(e) {
@@ -265,6 +420,13 @@ function setupDeviceUI() {
 
 // Start game after welcome
 function startGame() {
+    const name = playerNameInput ? playerNameInput.value : '';
+    currentPlayerName = name.trim();
+    
+    if (currentPlayerName) {
+        addPlayerToHistory(currentPlayerName);
+    }
+    
     if (welcomeOverlay) welcomeOverlay.style.display = 'none';
     game();
 }
@@ -273,7 +435,54 @@ if (startBtn) {
     startBtn.addEventListener('click', startGame);
 }
 
+// Pause menu button listeners
+if (resumeBtn) {
+    resumeBtn.addEventListener('click', resumeGame);
+}
+
+if (historyBtn) {
+    historyBtn.addEventListener('click', showPlayerHistory);
+}
+
+if (restartBtn) {
+    restartBtn.addEventListener('click', restartGame);
+}
+
+if (backToMenuBtn) {
+    backToMenuBtn.addEventListener('click', showPauseMenu);
+}
+
 setupDeviceUI();
+
+// Initialize player history
+loadPlayerHistory();
+
+// Handle canvas scaling for responsive design
+function scaleCanvas() {
+    const container = document.querySelector('.game-container');
+    if (!container || !canvas) return;
+    
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+    
+    // Calculate scale to fit canvas in container while maintaining aspect ratio
+    const scaleX = (containerWidth - 20) / canvas.width;
+    const scaleY = (containerHeight - 20) / canvas.height;
+    const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+    
+    // Apply scaling
+    canvas.style.width = (canvas.width * scale) + 'px';
+    canvas.style.height = (canvas.height * scale) + 'px';
+}
+
+// Scale canvas on load and resize
+window.addEventListener('resize', scaleCanvas);
+window.addEventListener('orientationchange', function() {
+    setTimeout(scaleCanvas, 100); // Delay to account for orientation change
+});
+
+// Initial canvas scaling
+scaleCanvas();
 
 // Prevent scrolling on mobile
 window.addEventListener('touchmove', function(e) {
