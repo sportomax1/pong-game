@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Pong Game</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,14 +15,39 @@
             <span id="controls-desktop">Player: Up/Down Arrow Keys</span><br>
             <span id="controls-touch" style="display:none;">Player: Swipe Up/Down or use on-screen buttons</span><br>
             <br>AI is always on the right.<br><br>
+            <div id="nameInputContainer">
+                <label for="playerNameInput">Enter your name:</label><br>
+                <input type="text" id="playerNameInput" placeholder="Your name" maxlength="20"><br>
+            </div>
             <button id="startBtn">Start Game</button>
             </p>
         </div>
     </div>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <!-- Pause overlay -->
+    <div id="pauseOverlay" style="display:none;">
+        <div>
+            <h2>Game Paused</h2>
+            <div id="pauseButtons">
+                <button id="resumeBtn">Resume Game</button>
+                <button id="historyBtn">Player History</button>
+                <button id="restartBtn">Restart Game</button>
+            </div>
+            <div id="playerHistorySection" style="display:none;">
+                <h3>Previous Players</h3>
+                <div id="playerHistoryList"></div>
+                <button id="backToMenuBtn">Back to Menu</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
     <div id="touchControls" style="display:none; position:fixed; bottom:30px; left:50%; transform:translateX(-50%); z-index:10;">
         <button id="btnUp" style="font-size:2em; margin:10px;">⬆️</button>
         <button id="btnDown" style="font-size:2em; margin:10px;">⬇️</button>
+        <button id="btnPause" style="font-size:1.5em; margin:10px; padding:10px;">⏸️</button>
     </div>
     <script src="script.js"></script>
 </body>
